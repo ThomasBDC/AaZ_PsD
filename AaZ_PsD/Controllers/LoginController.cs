@@ -1,4 +1,5 @@
 ﻿using AaZ_PsD.Model;
+using AaZ_PsD.Repository;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -18,14 +19,17 @@ namespace AaZ_PsD.Controllers
     public class LoginController : ControllerBase
     {
         private IConfiguration _config;
+        private AuthRepository _authRepository;
 
-        public LoginController(IConfiguration config)
+        public LoginController(IConfiguration config, AuthRepository authRepository)
         {
             _config = config;
+            _authRepository = authRepository;
         }
 
         [AllowAnonymous]
         [HttpPost]
+        [Route("/Login")]
         public IActionResult Login([FromBody] UserLogin userLogin)
         {
             var user = Authenticate(userLogin);
@@ -40,6 +44,35 @@ namespace AaZ_PsD.Controllers
             return NotFound("User not found");
         }
 
+        [AllowAnonymous]
+        [HttpPost]
+        [Route("/Signup")]
+        public IActionResult SignUp([FromBody] UserModel user)
+        {
+            if (user != null)
+            {
+                var passwordSalt = Helpers.PasswordSaltInBase64();
+                var passwordHash = Helpers.PasswordToHashBase64(user.Password, passwordSalt);
+
+                try
+                {
+                    _authRepository.SignUp(user, passwordSalt, passwordHash);
+
+                    return CreatedAtAction("Login", new UserLogin()
+                    {
+                        Username = user.Mail,
+                        Password = user.Password,
+                    });
+                }
+                catch (Exception ex)
+                {
+                    return StatusCode(500);
+                }
+            }
+
+            return StatusCode(500);
+        }
+
         private string Generate(UserModel user)
         {
             var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["Jwt:Key"]));
@@ -47,11 +80,10 @@ namespace AaZ_PsD.Controllers
 
             var claims = new[]
             {
-                new Claim(ClaimTypes.NameIdentifier, user.Username),
-                new Claim(ClaimTypes.Email, user.EmailAddress),
-                new Claim(ClaimTypes.GivenName, user.GivenName),
+                new Claim(ClaimTypes.Email, user.Mail),
+                new Claim(ClaimTypes.GivenName, user.Forename),
                 new Claim(ClaimTypes.Surname, user.Surname),
-                new Claim(ClaimTypes.Role, user.Role)
+                new Claim(ClaimTypes.Role, user.Role.IdRole.ToString())
             };
 
             var token = new JwtSecurityToken(
@@ -66,10 +98,7 @@ namespace AaZ_PsD.Controllers
         {
 
             //Todo : Vérifier les credentials en BDD et pas sur ce tableau en dur
-            var currentUser = UserConstants.Users.FirstOrDefault(
-                o => 
-                o.Username.ToLower() == userLogin.Username.ToLower() 
-                && o.Password == userLogin.Password);
+            UserModel currentUser = null;
 
             if (currentUser != null)
             {
@@ -80,13 +109,6 @@ namespace AaZ_PsD.Controllers
         }
     }
 
-    public class UserConstants
-    {
-        public static List<UserModel> Users = new List<UserModel>()
-        {
-            new UserModel() { Username = "jason_admin", EmailAddress = "jason.admin@email.com", Password = "MyPass_w0rd", GivenName = "Jason", Surname = "Bryant", Role = "Administrator" },
-            new UserModel() { Username = "elyse_seller", EmailAddress = "elyse.seller@email.com", Password = "MyPass_w0rd", GivenName = "Elyse", Surname = "Lambert", Role = "Seller" },
-        };
-    }
+    
 
 }
