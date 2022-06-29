@@ -1,5 +1,6 @@
 ﻿using AaZ_PsD.Model;
 using AaZ_PsD.Repository;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Collections.Generic;
 
@@ -19,6 +20,7 @@ namespace AaZ_PsD.Controllers
 
         [Route("/GetRoles")]
         [HttpGet]
+        [Authorize]
         public List<Role> GetRoles()
         {
             return _roleRepository.getAllRoles();
