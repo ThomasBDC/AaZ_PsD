@@ -97,9 +97,9 @@ namespace AaZ_PsD.Controllers
         {
             UserModel currentUser = _authRepository.GetUser(userLogin.Username);
 
-            if (currentUser != null)
+            if (currentUser == null)
             {
-                return currentUser;
+                return null;
             }
             else
             {
