@@ -40,8 +40,7 @@ namespace AaZ_PsD.Controllers
                 return Ok(token);
             }
 
-            //Renvoyer un vrai message d'erreur
-            return NotFound("User not found");
+            return StatusCode(403, "Connexion invalide");
         }
 
         [AllowAnonymous]
@@ -83,7 +82,7 @@ namespace AaZ_PsD.Controllers
                 new Claim(ClaimTypes.Email, user.Mail),
                 new Claim(ClaimTypes.GivenName, user.Forename),
                 new Claim(ClaimTypes.Surname, user.Surname),
-                new Claim(ClaimTypes.Role, user.Role.IdRole.ToString())
+                new Claim(ClaimTypes.Role, user.Role.Name)
             };
 
             var token = new JwtSecurityToken(
@@ -96,16 +95,25 @@ namespace AaZ_PsD.Controllers
 
         private UserModel Authenticate(UserLogin userLogin)
         {
-
-            //Todo : Vérifier les credentials en BDD et pas sur ce tableau en dur
-            UserModel currentUser = null;
+            UserModel currentUser = _authRepository.GetUser(userLogin.Username);
 
             if (currentUser != null)
             {
                 return currentUser;
             }
+            else
+            {
+                bool isOk = Helpers.PasswordValidation(currentUser.Password, currentUser.PasswordKey, userLogin.Password);
 
-            return null;
+                if (isOk)
+                {
+                    return currentUser;
+                }
+                else
+                {
+                    return null;
+                }
+            }
         }
     }
 
