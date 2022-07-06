@@ -59,6 +59,7 @@ namespace AaZ_PsD
 
             services.AddTransient<AuthRepository>();
             services.AddTransient<RoleRepository>();
+            services.AddTransient<UsersRepository>();
             services.AddSwaggerGen();
         }
 

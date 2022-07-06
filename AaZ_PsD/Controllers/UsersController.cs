@@ -13,9 +13,11 @@ namespace AaZ_PsD.Controllers
     public class UsersController : ControllerBase
     {
         private readonly RoleRepository _roleRepository;
-        public UsersController(RoleRepository roleRepository)
+        private readonly UsersRepository _usersRepository;
+        public UsersController(RoleRepository roleRepository, UsersRepository usersRepository)
         {
             _roleRepository = roleRepository;
+            _usersRepository = usersRepository;
         }
 
         [Route("/GetRoles")]
@@ -28,9 +30,10 @@ namespace AaZ_PsD.Controllers
 
         // GET: api/<UsersController>
         [HttpGet]
-        public IEnumerable<string> Get()
+        [Authorize]
+        public List<UserModel> Get()
         {
-            return new string[] { "value1", "value2" };
+            return _usersRepository.getAllUsers();
         }
 
         // GET api/<UsersController>/5
