@@ -43,13 +43,20 @@ namespace AaZ_PsD.Controllers
         public List<UserModel> Search(string searchLabel)
         {
             var allUsers = _usersRepository.getAllUsers();
-            
+
+            if (string.IsNullOrWhiteSpace(searchLabel))
+            {
+                return allUsers;
+            }
+
             var myUser = from user in allUsers
                          where user.Forename.Contains(searchLabel) ||
                                user.Surname.Contains(searchLabel) ||
                                user.Telephone.Contains(searchLabel) ||
                                user.Mail.Contains(searchLabel)
                         select user;
+
+            
 
             return myUser.ToList();
         }
