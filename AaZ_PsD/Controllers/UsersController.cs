@@ -3,6 +3,7 @@ using AaZ_PsD.Repository;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Collections.Generic;
+using System.Linq;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
@@ -34,6 +35,23 @@ namespace AaZ_PsD.Controllers
         public List<UserModel> Get()
         {
             return _usersRepository.getAllUsers();
+        }
+
+        // GET: api/<UsersController>
+        [HttpGet("Search")]
+        [Authorize]
+        public List<UserModel> Search(string searchLabel)
+        {
+            var allUsers = _usersRepository.getAllUsers();
+            
+            var myUser = from user in allUsers
+                         where user.Forename.Contains(searchLabel) ||
+                               user.Surname.Contains(searchLabel) ||
+                               user.Telephone.Contains(searchLabel) ||
+                               user.Mail.Contains(searchLabel)
+                        select user;
+
+            return myUser.ToList();
         }
 
         // GET api/<UsersController>/5
